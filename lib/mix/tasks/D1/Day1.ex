@@ -2,7 +2,6 @@ defmodule Mix.Tasks.Day1 do
   use Mix.Task
   require Timer
   require InputUtils
-  require Logger
 
   @input "input.txt"
 
@@ -22,8 +21,8 @@ defmodule Mix.Tasks.Day1 do
   defp part_one(data) do
     data
     |> Tuple.to_list()
-    |> Enum.map(&Enum.sort/1)
-    |> Enum.zip()
+    |> Stream.map(&Enum.sort/1)
+    |> Stream.zip()
     |> Enum.reduce(0, &(&2 + abs(elem(&1, 0) - elem(&1, 1))))
   end
 
