@@ -2,5 +2,5 @@
 Solutions in Elixir.
 
 ### Commands
-* `mix day_<number>`, for example, `mix day_1` to run compute solution for day 1.
-* `mix format` to format the code.
+* Run `mix day_<number>` to compute solution for day N, for example, `mix day_1`.
+* Run `mix format` to format the code.
