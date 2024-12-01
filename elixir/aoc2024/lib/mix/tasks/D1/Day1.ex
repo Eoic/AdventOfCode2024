@@ -1,12 +1,13 @@
 defmodule Mix.Tasks.Day1 do
   use Mix.Task
-  import InputUtils
+  require Timer
+  require InputUtils
 
   @input "input.txt"
 
   def parse_input() do
     __ENV__.file
-    |> read_lines(@input)
+    |> InputUtils.read_lines(@input)
     |> Stream.map(fn line ->
       line
       |> String.split(~r/\s/, trim: true)
@@ -34,7 +35,9 @@ defmodule Mix.Tasks.Day1 do
 
   def run(_) do
     data = parse_input()
-    IO.puts("Part one: #{part_one(data)}.")
-    IO.puts("Part two: #{part_two(data)}.")
+    p1_result = Timer.measure(fn -> part_one(data) end, "P1")
+    p2_result = Timer.measure(fn -> part_two(data) end, "P2")
+    IO.puts("Part one: #{p1_result}.")
+    IO.puts("Part two: #{p2_result}.")
   end
 end
