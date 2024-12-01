@@ -1,5 +1,6 @@
 defmodule Aoc2024.MixProject do
   use Mix.Project
+  require Config
 
   def project do
     [

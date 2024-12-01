@@ -14,16 +14,13 @@ defmodule Mix.Tasks.Day1 do
       |> Enum.map(&String.to_integer/1)
     end)
     |> Stream.zip()
-    |> Stream.map(fn items ->
-      items
-      |> Tuple.to_list()
-      |> Enum.sort()
-    end)
+    |> Stream.map(&Tuple.to_list/1)
     |> Enum.to_list()
   end
 
   defp part_one(data) do
     data
+    |> Enum.map(&Enum.sort/1)
     |> Enum.zip()
     |> Enum.reduce(0, &(&2 + abs(elem(&1, 0) - elem(&1, 1))))
   end
@@ -34,10 +31,10 @@ defmodule Mix.Tasks.Day1 do
   end
 
   def run(_) do
-    data = parse_input()
+    data = Timer.measure(fn -> parse_input() end, "IO")
     p1_result = Timer.measure(fn -> part_one(data) end, "Part 1")
     p2_result = Timer.measure(fn -> part_two(data) end, "Part 2")
-    IO.puts("Part one: #{p1_result}.")
-    IO.puts("Part two: #{p2_result}.")
+    IO.puts("\nPart one: #{p1_result}.")
+    IO.puts("\nPart two: #{p2_result}.")
   end
 end

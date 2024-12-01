@@ -3,7 +3,7 @@ defmodule Timer do
 
   def measure(callback, label) do
     {time_in_microseconds, result} = :timer.tc(callback)
-    Logger.info("[#{label}] Runtime: #{format_time(time_in_microseconds)}.\n")
+    Logger.info("[#{label}] Runtime: #{format_time(time_in_microseconds)}.")
     result
   end
 
