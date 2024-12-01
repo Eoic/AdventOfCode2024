@@ -5,7 +5,7 @@ defmodule Mix.Tasks.Day1 do
 
   @input "input.txt"
 
-  def parse_input() do
+  defp parse_input() do
     __ENV__.file
     |> InputUtils.read_lines(@input)
     |> Stream.map(fn line ->
@@ -22,21 +22,21 @@ defmodule Mix.Tasks.Day1 do
     |> Enum.to_list()
   end
 
-  def part_one(data) do
+  defp part_one(data) do
     data
     |> Enum.zip()
     |> Enum.reduce(0, &(&2 + abs(elem(&1, 0) - elem(&1, 1))))
   end
 
-  def part_two([left, right]) do
+  defp part_two([left, right]) do
     freq = Enum.frequencies(right)
     Enum.reduce(left, 0, &(&2 + Map.get(freq, &1, 0) * &1))
   end
 
   def run(_) do
     data = parse_input()
-    p1_result = Timer.measure(fn -> part_one(data) end, "P1")
-    p2_result = Timer.measure(fn -> part_two(data) end, "P2")
+    p1_result = Timer.measure(fn -> part_one(data) end, "Part 1")
+    p2_result = Timer.measure(fn -> part_two(data) end, "Part 2")
     IO.puts("Part one: #{p1_result}.")
     IO.puts("Part two: #{p2_result}.")
   end
