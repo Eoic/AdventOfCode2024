@@ -19,15 +19,15 @@ defmodule Mix.Tasks.Day2 do
     |> Enum.reverse()
   end
 
-  def in_range(deltas), do: not Enum.any?(deltas, &(abs(&1) not in 1..3))
+  defp in_range(deltas), do: not Enum.any?(deltas, &(abs(&1) not in 1..3))
 
-  def all_positive(deltas), do: Enum.all?(deltas, &(&1 > 0))
+  defp all_positive(deltas), do: Enum.all?(deltas, &(&1 > 0))
 
-  def all_negative(deltas), do: Enum.all?(deltas, &(&1 < 0))
+  defp all_negative(deltas), do: Enum.all?(deltas, &(&1 < 0))
 
-  def dampen(report, index, fun), do: fun.(List.delete_at(report, index))
+  defp dampen(report, index, fun), do: fun.(List.delete_at(report, index))
 
-  def is_stable?(report) do
+  defp is_stable?(report) do
     report
     |> Enum.chunk_every(2, 1, :discard)
     |> Enum.map(fn [left, right] -> right - left end)
