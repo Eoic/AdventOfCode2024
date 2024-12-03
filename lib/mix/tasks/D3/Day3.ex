@@ -1,4 +1,5 @@
 defmodule Mix.Tasks.Day3 do
+  require Timer
   require InputUtils
 
   @input "input.txt"
@@ -15,10 +16,7 @@ defmodule Mix.Tasks.Day3 do
   defp part_one(data) do
     @mul_pattern
     |> Regex.scan(data)
-    |> Enum.reduce(0, fn [match | _], total ->
-      %{"left" => left, "right" => right} = Regex.named_captures(@mul_pattern, match)
-      total + String.to_integer(left) * String.to_integer(right)
-    end)
+    |> Enum.reduce(0, fn [match | _], total -> total + multiply(match) end)
   end
 
   defp part_two(data) do
