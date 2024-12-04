@@ -24,7 +24,7 @@ defmodule Mix.Tasks.Day4 do
               Map.put(
                 state.matrix,
                 [state.width, state.height - 1],
-                <<String.to_charlist(token) |> hd()>>
+                <<hd(String.to_charlist(token))>>
               )
         }
       end)
@@ -54,14 +54,14 @@ defmodule Mix.Tasks.Day4 do
         if x - offset >= 0, do: collect_straight([x..(x - offset), y..y], grid)
 
       :right ->
-        if x + offset <= grid.width - 1, do: collect_straight([x..(x + offset), y..y], grid)
+        if x + offset < grid.width, do: collect_straight([x..(x + offset), y..y], grid)
 
       :up ->
         if y - offset >= 0,
           do: collect_straight([x..x, y..(y - offset)], grid)
 
       :down ->
-        if y + offset <= grid.height - 1,
+        if y + offset < grid.height,
           do: collect_straight([x..x, y..(y + offset)], grid)
 
       :up_left ->
@@ -73,11 +73,11 @@ defmodule Mix.Tasks.Day4 do
           do: collect_diagonal(x, y, &[&1 + 1, &2 - 1], grid, offset)
 
       :down_left ->
-        if x - offset >= 0 and y + offset <= grid.height - 1,
+        if x - offset >= 0 and y + offset < grid.height,
           do: collect_diagonal(x, y, &[&1 - 1, &2 + 1], grid, offset)
 
       :down_right ->
-        if x + offset <= grid.width - 1 and y + offset <= grid.height - 1,
+        if x + offset < grid.width and y + offset < grid.height,
           do: collect_diagonal(x, y, &[&1 + 1, &2 + 1], grid, offset)
     end
   end
