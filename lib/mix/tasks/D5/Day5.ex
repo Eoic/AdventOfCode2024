@@ -37,31 +37,31 @@ defmodule Mix.Tasks.Day5 do
     end)
   end
 
-  def find_valid_updates([rules, updates]) do
+  defp find_valid_updates([rules, updates]) do
     Enum.filter(updates, fn line -> line === Enum.sort(line, &(&2 in Map.get(rules, &1, []))) end)
   end
 
-  def find_invalid_updates([rules, updates]) do
+  defp find_invalid_updates([rules, updates]) do
     Enum.flat_map(updates, fn line ->
       sorted_line = Enum.sort(line, &(&2 in Map.get(rules, &1, [])))
       if sorted_line !== line, do: [sorted_line], else: []
     end)
   end
 
-  def do_middle_sum(updates) do
+  defp sum_medians(updates) do
     Enum.reduce(updates, 0, &(&2 + Enum.at(&1, div(length(&1), 2))))
   end
 
   defp part_one(data) do
     data
     |> find_valid_updates()
-    |> do_middle_sum()
+    |> sum_medians()
   end
 
   defp part_two(data) do
     data
     |> find_invalid_updates()
-    |> do_middle_sum()
+    |> sum_medians()
   end
 
   def run(_) do
