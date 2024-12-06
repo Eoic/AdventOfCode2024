@@ -34,10 +34,10 @@ defmodule Mix.Tasks.Day6 do
     x >= 0 and y >= 0 and x < width and y < height
   end
 
-  defp get_tile_action([px, py], %{:obstacles => obstacles, :width => width, :height => height}) do
+  defp get_tile_action([px, py], grid) do
     cond do
-      MapSet.member?(obstacles, [px, py]) -> :turn
-      is_inside?([px, py], width, height) -> :walk
+      MapSet.member?(grid.obstacles, [px, py]) -> :turn
+      is_inside?([px, py], grid.width, grid.height) -> :walk
       true -> :stop
     end
   end
@@ -60,7 +60,7 @@ defmodule Mix.Tasks.Day6 do
          extra_obstacles
        ) do
     right_side_obstacle =
-      case Map.get(@directions, direction, nil) do
+      case Map.get(@directions, direction) do
         :left ->
           Enum.find(obstacles, fn [_, y] -> py < y end)
 
@@ -78,14 +78,6 @@ defmodule Mix.Tasks.Day6 do
       do: MapSet.put(extra_obstacles, apply_direction(position, direction)),
       else: extra_obstacles
   end
-
-  defp trace_route(
-         grid,
-         position,
-         direction,
-         route \\ MapSet.new(),
-         extra_obstacles \\ MapSet.new()
-       )
 
   defp trace_route(
          grid,
@@ -112,8 +104,6 @@ defmodule Mix.Tasks.Day6 do
         [route, extra_obstacles]
     end
   end
-
-  defp is_looping?(grid, position, direction, visited \\ MapSet.new())
 
   defp is_looping?(grid, position, direction, visited) do
     if not MapSet.member?(visited, [position, direction]) do
@@ -142,7 +132,7 @@ defmodule Mix.Tasks.Day6 do
     |> Map.delete([[px, py - 1], @default_direction, [px, py]])
     |> Stream.filter(fn obstacle ->
       grid = %{grid | :obstacles => MapSet.put(grid.obstacles, obstacle)}
-      is_looping?(grid, grid.guard, @default_direction)
+      is_looping?(grid, grid.guard, @default_direction, MapSet.new())
     end)
     |> Enum.count()
   end
@@ -153,7 +143,10 @@ defmodule Mix.Tasks.Day6 do
 
   def run(_) do
     grid = parse_input()
-    [route, extra_obstacles] = trace_route(grid, grid.guard, @default_direction)
+
+    [route, extra_obstacles] =
+      trace_route(grid, grid.guard, @default_direction, MapSet.new(), MapSet.new())
+
     p1_result = Timer.measure(fn -> part_one(route) end, "Part 1")
     p2_result = Timer.measure(fn -> part_two(grid, extra_obstacles) end, "Part 2")
     IO.puts("| Part one: #{p1_result} |")
