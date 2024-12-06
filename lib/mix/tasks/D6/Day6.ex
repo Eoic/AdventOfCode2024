@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Day6 do
   require Timer
   require InputUtils
 
-  @input "sample.txt"
+  @input "input.txt"
   @directions %{
     [-1, 0] => :left,
     [1, 0] => :right,
@@ -53,7 +53,12 @@ defmodule Mix.Tasks.Day6 do
 
   def apply_direction([px, py], [dx, dy]), do: [px + dx, py + dy]
 
-  def update_extra_obstacles(position = [px, py], direction = [dx, dy], obstacles, loops) do
+  def update_extra_obstacles(
+        position = [px, py],
+        direction,
+        obstacles,
+        extra_obstacles
+      ) do
     right_side_obstacle =
       case Map.get(@directions, direction, nil) do
         :left ->
@@ -69,17 +74,9 @@ defmodule Mix.Tasks.Day6 do
           Enum.find(obstacles, fn [x, _] -> px > x end)
       end
 
-    if right_side_obstacle do
-      [ox, oy] = apply_direction(position, direction)
-
-      if MapSet.member?(loops, [[ox, oy], [dx, dy], [px, py]]) do
-        loops
-      else
-        MapSet.put(loops, [[ox, oy], [dx, dy], [px, py]])
-      end
-    else
-      loops
-    end
+    if right_side_obstacle,
+      do: MapSet.put(extra_obstacles, apply_direction(position, direction)),
+      else: extra_obstacles
   end
 
   def solve_route(
@@ -89,7 +86,7 @@ defmodule Mix.Tasks.Day6 do
         position,
         direction,
         route,
-        loops
+        extra_obstacles
       ) do
     route = MapSet.put(route, position)
     next_position = apply_direction(position, direction)
@@ -97,10 +94,18 @@ defmodule Mix.Tasks.Day6 do
 
     case action do
       :turn ->
-        solve_route(obstacles, width, height, position, turn_right(direction), route, loops)
+        solve_route(
+          obstacles,
+          width,
+          height,
+          position,
+          turn_right(direction),
+          route,
+          extra_obstacles
+        )
 
       :walk ->
-        loops = update_extra_obstacles(position, direction, obstacles, loops)
+        extra_obstacles = update_extra_obstacles(position, direction, obstacles, extra_obstacles)
 
         solve_route(
           obstacles,
@@ -109,15 +114,15 @@ defmodule Mix.Tasks.Day6 do
           next_position,
           direction,
           route,
-          loops
+          extra_obstacles
         )
 
       :stop ->
-        [route, loops]
+        [route, extra_obstacles]
     end
   end
 
-  def solve_loop_route(
+  def is_looping?(
         obstacles,
         width,
         height,
@@ -136,7 +141,7 @@ defmodule Mix.Tasks.Day6 do
         :turn ->
           visited = MapSet.put(visited, [position, direction])
 
-          solve_loop_route(
+          is_looping?(
             obstacles,
             width,
             height,
@@ -147,7 +152,7 @@ defmodule Mix.Tasks.Day6 do
           )
 
         :walk ->
-          solve_loop_route(
+          is_looping?(
             obstacles,
             width,
             height,
@@ -184,17 +189,10 @@ defmodule Mix.Tasks.Day6 do
     [px, py] = guard
     extra_obstacles = Map.delete(extra_obstacles, [[px, py - 1], [0, -1], [px, py]])
 
-    Enum.flat_map(extra_obstacles, fn [obstacle, direction, position] ->
+    Enum.filter(extra_obstacles, fn obstacle ->
       obstacles = MapSet.put(obstacles, obstacle)
-      is_looping = solve_loop_route(obstacles, width, height, guard, [0, -1], MapSet.new(), true)
-
-      if is_looping do
-        [obstacle]
-      else
-        []
-      end
+      is_looping?(obstacles, width, height, guard, [0, -1], MapSet.new(), true)
     end)
-    |> Enum.uniq()
     |> Enum.count()
   end
 
@@ -202,8 +200,8 @@ defmodule Mix.Tasks.Day6 do
     MapSet.size(route)
   end
 
-  defp part_two(map, loops) do
-    count_loops(map, loops)
+  defp part_two(map, extra_obstacles) do
+    count_loops(map, extra_obstacles)
   end
 
   def run(_) do
