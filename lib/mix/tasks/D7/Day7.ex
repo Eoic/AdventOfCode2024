@@ -54,7 +54,6 @@ defmodule Mix.Tasks.Day7 do
     [result, ops_cache] =
       0..(trunc(:math.pow(ops_base, size)) - 1)
       |> Enum.reduce_while([0, ops_cache], fn position, [_, ops_cache] ->
-        IO.inspect(map_size(ops_cache))
         [ops, ops_cache] = generate_ops(position, size, ops_base, ops_cache)
         result = evaluate(variables, ops)
 
