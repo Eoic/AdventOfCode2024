@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Day7 do
   require Timer
   require InputUtils
 
-  @input "sample.txt"
+  @input "input.txt"
 
   defp parse_input() do
     __ENV__.file
@@ -21,7 +21,7 @@ defmodule Mix.Tasks.Day7 do
 
   defp generate_ops(position, size, ops_base, ops_cache) do
     if Map.has_key?(ops_cache, [position, size]) do
-      [Map.get(ops_cache, [position, size], []), ops_cache]
+      [Map.get(ops_cache, [position, size]), ops_cache]
     else
       ops =
         position
@@ -54,14 +54,13 @@ defmodule Mix.Tasks.Day7 do
     [result, ops_cache] =
       0..(trunc(:math.pow(ops_base, size)) - 1)
       |> Enum.reduce_while([0, ops_cache], fn position, [_, ops_cache] ->
+        IO.inspect(map_size(ops_cache))
         [ops, ops_cache] = generate_ops(position, size, ops_base, ops_cache)
         result = evaluate(variables, ops)
 
-        if result === target do
-          {:halt, [result, ops_cache]}
-        else
-          {:cont, [0, ops_cache]}
-        end
+        if result === target,
+          do: {:halt, [result, ops_cache]},
+          else: {:cont, [0, ops_cache]}
       end)
 
     [result, ops_cache]
