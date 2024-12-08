@@ -61,13 +61,13 @@ defmodule Mix.Tasks.Day8 do
     collect_antinodes(tail, size, resonate?, antinodes)
   end
 
-  defp find_all_antinodes(data, resonate) do
+  defp find_all_antinodes(data, resonate?) do
     size = %{width: data.width, height: data.height}
 
     data.antennas
     |> Map.values()
     |> Enum.flat_map(fn positions ->
-      collect_antinodes(positions, size, resonate, [])
+      collect_antinodes(positions, size, resonate?, [])
     end)
     |> Enum.filter(fn position -> valid_position?(position, size) end)
     |> Enum.uniq()
