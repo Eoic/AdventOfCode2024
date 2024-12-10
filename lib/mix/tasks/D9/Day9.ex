@@ -33,11 +33,11 @@ defmodule Mix.Tasks.Day9 do
         }
       end
     end)
+
+    # |> IO.inspect(charlists: :as_lists, limit: :infinity)
   end
 
   defp checksum(blocks) do
-    IO.inspect(blocks)
-
     Enum.reduce(blocks, 0, fn {file_index, positions}, total ->
       total + Enum.reduce(positions, 0, fn position, sum -> sum + position * file_index end)
     end)
@@ -77,7 +77,9 @@ defmodule Mix.Tasks.Day9 do
       size = length(file_indices)
 
       free_block_index =
-        Enum.find_index(state.free, fn free_block -> length(free_block) >= size end)
+        Enum.find_index(state.free, fn free_block ->
+          length(free_block) >= size and hd(free_block) < hd(file_indices)
+        end)
 
       if free_block_index !== nil do
         free_block = Enum.at(state.free, free_block_index)
