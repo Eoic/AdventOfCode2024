@@ -33,8 +33,6 @@ defmodule Mix.Tasks.Day9 do
         }
       end
     end)
-
-    # |> IO.inspect(charlists: :as_lists, limit: :infinity)
   end
 
   defp checksum(blocks) do
@@ -89,8 +87,6 @@ defmodule Mix.Tasks.Day9 do
           if leftover_indices !== [],
             do: List.replace_at(state.free, free_block_index, leftover_indices),
             else: List.delete_at(state.free, free_block_index)
-
-        # IO.inspect(["Moved", file_index])
 
         {:cont,
          %{state | free: new_free, blocks: [{file_index, remapped_indices} | state.blocks]}}
