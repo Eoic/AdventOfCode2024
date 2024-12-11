@@ -46,6 +46,7 @@ defmodule Mix.Tasks.Day11 do
     end
   end
 
+  @spec apply_all(:maps.iterator(any(), any()) | map()) :: any()
   def apply_all(stones) do
     stones
     |> Map.to_list()
