@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Day10 do
   require Timer
   require InputUtils
 
-  @input "input.txt"
+  @input "sample2.txt"
 
   defp parse_input() do
     __ENV__.file
@@ -29,15 +29,23 @@ defmodule Mix.Tasks.Day10 do
     |> Kernel.then(fn map -> %{map | width: map.width + 1} end)
   end
 
-  def is_neighbor?({[x, y], cell}, {[next_x, next_y], next_cell}, visited) do
-    next_cell - cell === 1 and
-      abs(x - next_x) + abs(y - next_y) === 1 and
-      not MapSet.member?(visited, [next_x, next_y])
+  def is_neighbor?({[cx, cy], current_cell}, {[nx, ny], next_cell}, visited) do
+    next_cell - current_cell === 1 and
+      abs(cx - nx) + abs(cy - ny) === 1 and
+      not MapSet.member?(visited, [nx, ny])
   end
 
-  def traverse([], _, _visited, path), do: path
+  # def get_lowest_unvisited(positions, visited) do
+  #   Enum.find(positions, fn position -> not MapSet.member?(visited, position) end)
+  # end
 
-  def traverse([current = {[cx, cy], _} | tail], positions, visited, path) do
+  def traverse([], _, _visited, path), do: Enum.reverse(path)
+
+  def traverse([current = {[cx, cy], cell} | tail], positions, visited, path) do
+    if cell === 9 do
+      IO.inspect(["Visited 9", [cx, cy]])
+    end
+
     if MapSet.member?(visited, [cx, cy]) do
       traverse(tail, positions, visited, path)
     else
@@ -48,64 +56,84 @@ defmodule Mix.Tasks.Day10 do
         |> Enum.filter(fn next -> is_neighbor?(current, next, visited) end)
         |> Enum.sort_by(fn {[_x, _y], cell} -> cell end)
 
+      if length(neighbors) === 0 and cell !== 9 do
+        IO.inspect(["Dead end at", {[cx, cy], cell}], charlists: :as_lists)
+      end
+
       traverse(tail ++ neighbors, positions, visited, [current | path])
     end
   end
 
-  # defp part_one(data) do
-  #   data.starts
-  #   |> Enum.map(fn start ->
-  #     # IO.inspect(start, label: "Start")
-  #     traverse([start], Map.to_list(data.grid), MapSet.new(), [])
-  #     |> Enum.filter(fn {[x, y], cell} -> cell === 9 end)
-  #     |> Enum.count()
+  # def trace_path(current, positions, visited, path) do
+  #   visited = MapSet.put(visited, current)
+  #   next = Enum.find(positions, fn next -> is_neighbor?(current, next, MapSet.new()) end)
 
-  #     # |> MapSet.filter(fn {[x, y], c} -> c === 9 end)
-  #     # |> MapSet.size()
-  #     # |> IO.inspect()
-
-  #     # |> Map.filter(fn {[x, y], 9} -> [x, y] end)
-  #   end)
-  #   |> Enum.sum()
-  #   |> IO.inspect()
-
-  #   # |> IO.inspect()
-
-  #   :noop
+  #   if next === nil do
+  #     {[current | path], visited}
+  #   else
+  #     trace_path(next, positions, visited, [current | path])
+  #   end
   # end
 
-  defp part_two(data) do
-    IO.inspect(data.starts |> length())
+  # def count_alternative_paths(path, visited, alt_path_count) do
+  #   unvisited = get_lowest_unvisited(path, visited)
 
+  #   if unvisited === nil do
+  #     alt_path_count
+  #   else
+  #     {alt_path, visited} = trace_path(unvisited, path, visited, [])
+  #     IO.inspect(alt_path)
+  #     count_alternative_paths(path, visited, alt_path_count + 1)
+  #   end
+  # end
+
+  def count_junctions([], _, counts), do: counts
+
+  def count_junctions([current = {[x, y], cell} | path], positions, counts) do
+    neighbors = Enum.filter(positions, fn next -> is_neighbor?(current, next, MapSet.new()) end)
+
+    counts =
+      Map.update(counts, [x, y], length(neighbors), fn current_count ->
+        length(neighbors)
+      end)
+
+    count_junctions(path, positions, counts)
+  end
+
+  defp part_one(data) do
     data.starts
     |> Enum.map(fn start ->
-      # IO.inspect(start, label: "Start")
       traverse([start], Map.to_list(data.grid), MapSet.new(), [])
-      |> Enum.frequencies_by(fn {[x, y], cell} -> cell end)
-      |> Map.to_list()
-      |> Enum.map(fn {k, el} -> el end)
+      |> Enum.filter(fn {_, cell} -> cell === 9 end)
       |> Enum.count()
-
-      # |> Enum.filter(fn {[x, y], cell} -> cell === 9 end)
-      # |> Enum.count()
-
-      # |> MapSet.filter(fn {[x, y], c} -> c === 9 end)
-      # |> MapSet.size()
-      # |> IO.inspect()
-
-      # |> Map.filter(fn {[x, y], 9} -> [x, y] end)
     end)
     |> Enum.sum()
-    |> IO.inspect()
+  end
 
-    # |> IO.inspect()
+  defp part_two(data) do
+    data.starts
+    |> Enum.map(fn start ->
+      [start]
+      |> traverse(Map.to_list(data.grid), MapSet.new(), [])
+      # |> Kernel.then(fn path -> count_junctions(path, path, %{}) end)
+      # |> Map.to_list()
+      # |> Enum.map(fn {[x, y], count} -> count end)
+      # |> Enum.sum()
+      # |> Kernel.then(fn sum -> sum - 9 end)
+      # |> Enum.frequencies_by(fn {[_, _], cell} -> cell end)
+      |> IO.inspect()
 
-    :noop
+      # |> count_alternative_paths(MapSet.new(), 0)
+
+      # |> IO.inspect()
+    end)
+
+    # |> Enum.sum()
   end
 
   def run(_) do
     data = Timer.measure(fn -> parse_input() end, "Input")
-    # p1_result = Timer.measure(fn -> part_one(data) end, "Part 1")
+    p1_result = Timer.measure(fn -> part_one(data) end, "Part 1")
     p2_result = Timer.measure(fn -> part_two(data) end, "Part 2")
     # IO.puts("| Part one: #{p1_result} |")
     # IO.puts("| Part two: #{p2_result} |")
