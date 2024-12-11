@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Day10 do
   require Timer
   require InputUtils
 
-  @input "sample3.txt"
+  @input "input.txt"
 
   defp parse_input() do
     __ENV__.file
@@ -29,15 +29,29 @@ defmodule Mix.Tasks.Day10 do
     |> Kernel.then(fn map -> %{map | width: map.width + 1} end)
   end
 
-  def is_neighbor?({[cx, cy], current_cell}, {[nx, ny], next_cell}, visited) do
+  defp is_neighbor?({[cx, cy], current_cell}, {[nx, ny], next_cell}, visited) do
     next_cell - current_cell === 1 and
       abs(cx - nx) + abs(cy - ny) === 1 and
       not MapSet.member?(visited, [nx, ny])
   end
 
-  def traverse([], _, _visited, path), do: Enum.reverse(path)
+  defp valid(:left, [cx, cy], [nx, ny]), do: cx - nx === 1 and cy === ny
 
-  def traverse([current = {[cx, cy], _cell} | tail], positions, visited, path) do
+  defp valid(:right, [cx, cy], [nx, ny]), do: cx - nx === -1 and cy === ny
+
+  defp valid(:up, [cx, cy], [nx, ny]), do: cy - ny === 1 and cx === nx
+
+  defp valid(:down, [cx, cy], [nx, ny]), do: cy - ny === -1 and cx === nx
+
+  defp get_neighbors({[cx, cy], current_cell}, direction, positions) do
+    Enum.filter(positions, fn {[nx, ny], next_cell} ->
+      valid(direction, [cx, cy], [nx, ny]) and next_cell - current_cell === 1
+    end)
+  end
+
+  defp traverse([], _, _visited, path), do: Enum.reverse(path)
+
+  defp traverse([current = {[cx, cy], _cell} | tail], positions, visited, path) do
     if MapSet.member?(visited, [cx, cy]) do
       traverse(tail, positions, visited, path)
     else
@@ -52,18 +66,20 @@ defmodule Mix.Tasks.Day10 do
     end
   end
 
-  def count_junctions([], _, counts), do: counts
+  defp count_paths(current = {_, cell}, positions) do
+    if cell === 9 do
+      1
+    else
+      [:left, :right, :up, :down]
+      |> Enum.reduce(0, fn direction, sum ->
+        neighbors = get_neighbors(current, direction, positions)
 
-  def count_junctions([current = {[x, y], cell} | path], positions, counts) do
-    neighbors = Enum.filter(positions, fn next -> is_neighbor?(current, next, MapSet.new()) end)
-
-    counts =
-      Map.update(counts, {[x, y], cell}, length(neighbors), fn current_count ->
-        IO.inspect("ALARM!")
-        length(neighbors) + current_count
+        sum +
+          Enum.reduce(neighbors, 0, fn neighbor, total ->
+            total + count_paths(neighbor, positions)
+          end)
       end)
-
-    count_junctions(path, positions, counts)
+    end
   end
 
   defp part_one(data) do
@@ -78,31 +94,15 @@ defmodule Mix.Tasks.Day10 do
 
   defp part_two(data) do
     data.starts
-    |> Enum.map(fn start ->
-      [start]
-      |> traverse(Map.to_list(data.grid), MapSet.new(), [])
-      |> Kernel.then(fn path -> count_junctions(path, path, %{}) end)
-      |> IO.inspect()
-
-      # |> Map.to_list()
-      # |> Enum.map(fn {[x, y], count} -> count end)
-      # |> Enum.sum()
-      # |> Kernel.then(fn sum -> sum - 9 end)
-      # |> Enum.frequencies_by(fn {[_, _], cell} -> cell end)
-
-      # |> count_alternative_paths(MapSet.new(), 0)
-
-      # |> IO.inspect()
-    end)
-
-    # |> Enum.sum()
+    |> Stream.map(&count_paths(&1, data.grid))
+    |> Enum.sum()
   end
 
   def run(_) do
     data = Timer.measure(fn -> parse_input() end, "Input")
     p1_result = Timer.measure(fn -> part_one(data) end, "Part 1")
     p2_result = Timer.measure(fn -> part_two(data) end, "Part 2")
-    # IO.puts("| Part one: #{p1_result} |")
-    # IO.puts("| Part two: #{p2_result} |")
+    IO.puts("| Part one: #{p1_result} |")
+    IO.puts("| Part two: #{p2_result} |")
   end
 end
