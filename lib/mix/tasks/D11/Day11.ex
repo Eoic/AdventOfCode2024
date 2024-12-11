@@ -22,12 +22,12 @@ defmodule Mix.Tasks.Day11 do
     |> Kernel.===(0)
   end
 
-  def apply_rule(value, stones, change) do
+  defp apply_rule({value, count}, stones) do
     cond do
       value === 0 ->
         stones
-        |> Map.update(0, -change, &(&1 - change))
-        |> Map.update(1, change, &(&1 + change))
+        |> Map.update(0, -count, &(&1 - count))
+        |> Map.update(1, count, &(&1 + count))
 
       even_digits?(value) ->
         value_str = Integer.to_string(value)
@@ -35,29 +35,23 @@ defmodule Mix.Tasks.Day11 do
         {left, right} = String.split_at(value_str, div(value_len, 2))
 
         stones
-        |> Map.update(String.to_integer(left), change, fn current -> current + change end)
-        |> Map.update(String.to_integer(right), change, fn current -> current + change end)
-        |> Map.update(value, -change, fn current -> current - change end)
+        |> Map.update(String.to_integer(left), count, &(&1 + count))
+        |> Map.update(String.to_integer(right), count, &(&1 + count))
+        |> Map.update(value, -count, fn current -> current - count end)
 
       true ->
         stones
-        |> Map.update(value, -change, fn current -> current - change end)
-        |> Map.update(value * 2024, change, fn current -> current + change end)
+        |> Map.update(value, -count, &(&1 - count))
+        |> Map.update(value * 2024, count, &(&1 + count))
     end
   end
 
-  @spec apply_all(:maps.iterator(any(), any()) | map()) :: any()
-  def apply_all(stones) do
-    stones
-    |> Map.to_list()
-    |> Enum.reduce(stones, fn {value, count}, stones ->
-      apply_rule(value, stones, count)
-    end)
+  defp apply_all(_, stones) do
+    Enum.reduce(stones, stones, &apply_rule/2)
   end
 
-  def blink(stones, count) do
-    0..(count - 1)//1
-    |> Enum.reduce(stones, fn _, stones -> apply_all(stones) end)
+  defp blink(stones, count) do
+    Enum.reduce(0..(count - 1)//1, stones, &apply_all/2)
   end
 
   defp count_stones(stones, blinks) do
