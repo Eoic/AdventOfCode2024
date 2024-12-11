@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Day10 do
   require Timer
   require InputUtils
 
-  @input "sample1.txt"
+  @input "input.txt"
 
   defp parse_input() do
     __ENV__.file
@@ -29,86 +29,84 @@ defmodule Mix.Tasks.Day10 do
     |> Kernel.then(fn map -> %{map | width: map.width + 1} end)
   end
 
-  def is_valid_next?({[x, y], cell}, {[next_x, next_y], next_cell}, visited) do
+  def is_neighbor?({[x, y], cell}, {[next_x, next_y], next_cell}, visited) do
     next_cell - cell === 1 and
-      abs(x - next_x + (y - next_y)) === 1 and
-      not MapSet.member?(visited, {[next_x, next_y], next_cell})
+      abs(x - next_x) + abs(y - next_y) === 1 and
+      not MapSet.member?(visited, [next_x, next_y])
   end
 
-  # def traverse(_, [], visited), do: visited
+  def traverse([], _, _visited, path), do: path
 
-  # def traverse(current, remaining, visited) do
-  #   visited = [current | visited]
-  #   next_position = Enum.find(remaining, fn next -> is_valid_next?(current, next, visited) end)
+  def traverse([current = {[cx, cy], _} | tail], positions, visited, path) do
+    if MapSet.member?(visited, [cx, cy]) do
+      traverse(tail, positions, visited, path)
+    else
+      visited = MapSet.put(visited, [cx, cy])
 
-  #   if next_position do
-  #     remaining = Enum.filter(remaining, fn item -> next_position !== item end)
-  #     traverse(next_position, remaining, visited)
-  #   else
-  #     visited
-  #   end
-  # end
+      neighbors =
+        positions
+        |> Enum.filter(fn next -> is_neighbor?(current, next, visited) end)
+        |> Enum.sort_by(fn {[_x, _y], cell} -> cell end)
 
-  # def traverse(_, [], visited, branch_starts), do: [visited, branch_starts]
-
-  # def traverse(current, remaining, visited, branch_starts) do
-  #   visited = MapSet.put(visited, current)
-  #   next_positions = Enum.filter(remaining, fn next -> is_valid_next?(current, next, visited) end)
-
-  #   [next_position, branch_starts] =
-  #     if length(next_positions) > 0 do
-  #       [hd(next_positions), branch_starts ++ tl(next_positions)]
-  #     else
-  #       [nil, branch_starts]
-  #     end
-
-  #   if next_position do
-  #     remaining = Enum.filter(remaining, fn item -> next_position !== item end)
-  #     traverse(next_position, remaining, visited, branch_starts)
-  #   else
-  #     [visited, branch_starts]
-  #   end
-  # end
-
-  def traverse_bfs([], _, _visited, path), do: path
-
-  def traverse_bfs([current | tail], positions, visited, path) do
-    [visited, path] =
-      if not MapSet.member?(visited, current) do
-        visited = MapSet.put(visited, current)
-        [visited, path]
-      else
-        [visited, path]
-      end
-
-    path = [current | path]
-    next_positions = Enum.filter(positions, fn next -> is_valid_next?(current, next, visited) end)
-    to_visit = tail ++ next_positions
-    traverse_bfs(to_visit, positions, visited, path)
+      traverse(tail ++ neighbors, positions, visited, [current | path])
+    end
   end
 
-  defp part_one(data) do
-    [Enum.at(data.starts, 0)]
+  # defp part_one(data) do
+  #   data.starts
+  #   |> Enum.map(fn start ->
+  #     # IO.inspect(start, label: "Start")
+  #     traverse([start], Map.to_list(data.grid), MapSet.new(), [])
+  #     |> Enum.filter(fn {[x, y], cell} -> cell === 9 end)
+  #     |> Enum.count()
+
+  #     # |> MapSet.filter(fn {[x, y], c} -> c === 9 end)
+  #     # |> MapSet.size()
+  #     # |> IO.inspect()
+
+  #     # |> Map.filter(fn {[x, y], 9} -> [x, y] end)
+  #   end)
+  #   |> Enum.sum()
+  #   |> IO.inspect()
+
+  #   # |> IO.inspect()
+
+  #   :noop
+  # end
+
+  defp part_two(data) do
+    IO.inspect(data.starts |> length())
+
+    data.starts
     |> Enum.map(fn start ->
-      traverse_bfs([start], Map.to_list(data.grid), MapSet.new(), [])
-      # |> MapSet.filter(fn {[_, _], cell} -> cell === 9 end)
+      # IO.inspect(start, label: "Start")
+      traverse([start], Map.to_list(data.grid), MapSet.new(), [])
+      |> Enum.frequencies_by(fn {[x, y], cell} -> cell end)
+      |> Map.to_list()
+      |> Enum.map(fn {k, el} -> el end)
+      |> Enum.count()
 
+      # |> Enum.filter(fn {[x, y], cell} -> cell === 9 end)
+      # |> Enum.count()
+
+      # |> MapSet.filter(fn {[x, y], c} -> c === 9 end)
       # |> MapSet.size()
+      # |> IO.inspect()
 
-      # |> map_size()
+      # |> Map.filter(fn {[x, y], 9} -> [x, y] end)
     end)
+    |> Enum.sum()
     |> IO.inspect()
+
+    # |> IO.inspect()
 
     :noop
   end
 
-  defp part_two(data) do
-  end
-
   def run(_) do
     data = Timer.measure(fn -> parse_input() end, "Input")
-    p1_result = Timer.measure(fn -> part_one(data) end, "Part 1")
-    # p2_result = Timer.measure(fn -> part_two(data) end, "Part 2")
+    # p1_result = Timer.measure(fn -> part_one(data) end, "Part 1")
+    p2_result = Timer.measure(fn -> part_two(data) end, "Part 2")
     # IO.puts("| Part one: #{p1_result} |")
     # IO.puts("| Part two: #{p2_result} |")
   end
