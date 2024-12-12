@@ -9,7 +9,7 @@
             "name": "mix (Default task)",
             "request": "launch",
             "projectDir": "${workspaceRoot}",
-            "task": "day_7"
+            "task": "day_12"
         },
         {
             "type": "mix_task",
