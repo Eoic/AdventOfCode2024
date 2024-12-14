@@ -35,7 +35,9 @@ defmodule Mix.Tasks.Day14 do
     %{robot | position: {nx, ny}}
   end
 
-  def compute_safety(robots) do
+  defp step_all(robots), do: Enum.map(robots, &step/1)
+
+  defp compute_safety(robots) do
     qx = floor(div(@width, 2))
     qy = floor(div(@height, 2))
 
@@ -44,29 +46,40 @@ defmodule Mix.Tasks.Day14 do
       |> Enum.frequencies_by(fn robot -> robot.position end)
       |> Map.filter(fn {{x, y}, _} -> x !== qx and y !== qy end)
 
-    {left, right} = Enum.split_with(freq, fn {{x, _y}, _} -> x < qx end)
-    {tl, bl} = Enum.split_with(left, fn {{_x, y}, _} -> y < qy end)
-    {tr, br} = Enum.split_with(right, fn {{_x, y}, _} -> y < qy end)
+    {left, right} = Enum.split_with(freq, fn {{x, _}, _} -> x < qx end)
+    {tl, bl} = Enum.split_with(left, fn {{_, y}, _} -> y < qy end)
+    {tr, br} = Enum.split_with(right, fn {{_, y}, _} -> y < qy end)
 
     [tl, tr, bl, br]
     |> Enum.map(fn quadrant -> Enum.reduce(quadrant, 0, fn {_, count}, sum -> sum + count end) end)
     |> Enum.product()
   end
 
-  defp part_one(robots) do
-    0..99//1
-    |> Enum.reduce(robots, fn _, robots -> Enum.map(robots, fn robot -> step(robot) end) end)
-    |> compute_safety()
-    |> IO.inspect()
+  defp find_tree_second(robots, second \\ 0) do
+    non_overlapping =
+      robots
+      |> Enum.frequencies_by(fn robot -> robot.position end)
+      |> Map.filter(fn {{_x, _y}, count} -> count === 1 end)
+      |> map_size()
+
+    if length(robots) === non_overlapping,
+      do: second,
+      else: find_tree_second(step_all(robots), second + 1)
   end
 
-  # defp part_two(data), do: :noop
+  defp part_one(robots) do
+    0..99//1
+    |> Enum.reduce(robots, fn _, robots -> step_all(robots) end)
+    |> compute_safety()
+  end
+
+  defp part_two(robots), do: find_tree_second(robots)
 
   def run(_) do
     data = Timer.measure(fn -> parse_input() end, "Input")
     p1_result = Timer.measure(fn -> part_one(data) end, "Part 1")
-    # p2_result = Timer.measure(fn -> part_two(data) end, "Part 2")
-    # IO.puts("| Part one: #{p1_result} |")
-    # IO.puts("| Part two: #{p2_result} |")
+    p2_result = Timer.measure(fn -> part_two(data) end, "Part 2")
+    IO.puts("| Part one: #{p1_result} |")
+    IO.puts("| Part two: #{p2_result} |")
   end
 end
